@@ -19,7 +19,7 @@ const Update = () => {
     // Fetch the current book details to pre-fill the form
     const fetchBook = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/books/${bookId}`);
+        const res = await axios.get(`https://books-web-app.onrender.com/books/${bookId}`);
         setBook(res.data);
       } catch (err) {
         console.error("Error fetching book details:", err);
@@ -40,7 +40,7 @@ const Update = () => {
   const handleClick = async (e) => {
     e.preventDefault();
     try {
-      await axios.put(`http://localhost:5000/books/${bookId}`, book);
+      await axios.put(`https://books-web-app.onrender.com/books/${bookId}`, book);
       navigate("/");
     } catch (err) {
       console.error("Error updating book:", err);
