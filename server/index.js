@@ -10,40 +10,56 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-const db = mysql.createConnection({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-});
+let db;
 
-db.connect((err) => {
-  if (err) {
-    console.error("Error connecting to MySQL:", err);
-    return;
-  }
-  console.log("Connected to MySQL database.");
+const connectToDatabase = () => {
+  db = mysql.createConnection({
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
+  });
 
-  // Create the books table if it doesn't exist
-  const createTableQuery = `
-    CREATE TABLE IF NOT EXISTS books (
-      id INT NOT NULL AUTO_INCREMENT,
-      title VARCHAR(45) NOT NULL,
-      \`desc\` VARCHAR(1000) NOT NULL,
-      cover VARCHAR(1000) DEFAULT NULL,
-      price INT NOT NULL,
-      PRIMARY KEY (id)
-    )
-  `;
-  
-  db.query(createTableQuery, (err, result) => {
+  db.connect((err) => {
     if (err) {
-      console.error("Error creating books table:", err);
+      console.error("Error connecting to MySQL:", err);
+      setTimeout(connectToDatabase, 2000); // Reattempt connection after 2 seconds
       return;
     }
-    console.log("Books table created or already exists.");
+    console.log("Connected to MySQL database.");
+
+    // Create the books table if it doesn't exist
+    const createTableQuery = `
+      CREATE TABLE IF NOT EXISTS books (
+        id INT NOT NULL AUTO_INCREMENT,
+        title VARCHAR(45) NOT NULL,
+        \`desc\` VARCHAR(1000) NOT NULL,
+        cover VARCHAR(1000) DEFAULT NULL,
+        price INT NOT NULL,
+        PRIMARY KEY (id)
+      )
+    `;
+    
+    db.query(createTableQuery, (err, result) => {
+      if (err) {
+        console.error("Error creating books table:", err);
+        return;
+      }
+      console.log("Books table created or already exists.");
+    });
   });
-});
+
+  db.on('error', (err) => {
+    console.error('Database error:', err);
+    if (err.code === 'PROTOCOL_CONNECTION_LOST') {
+      connectToDatabase(); // Reconnect on connection lost
+    } else {
+      throw err;
+    }
+  });
+};
+
+connectToDatabase();
 
 app.get("/", (req, res) => {
   res.json("Hello from the server");
