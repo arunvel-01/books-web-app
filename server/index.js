@@ -2,7 +2,6 @@ import express from "express";
 import mysql from "mysql2";
 import cors from "cors";
 import dotenv from "dotenv";
-import { job } from "./cron.js";
 
 dotenv.config();
 
@@ -122,8 +121,6 @@ app.put("/books/:id", (req, res) => {
     res.json("Book has been updated successfully.");
   });
 });
-
-job.start();
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
